@@ -135,7 +135,6 @@ export class FuncionarioService {
         where: { id },
         data: updateFuncionarioDto,
       });
-      console.log(funcionario);
 
       if (funcionario.count > 0) {
         const nomeSeparado = found.nome.split(' ');

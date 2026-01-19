@@ -6,6 +6,9 @@ import { hashSync as bcryptHashSync } from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { UpdateFuncionarioDto } from 'src/funcionario/dto/update-funcionario.dto';
 import { LoginDto } from './dto/login.dto';
+import { FuncionarioOne } from 'src/interfaces/funcionarioOne.type';
+import { IMessage } from 'src/interfaces/message.type';
+import { AuthResponse } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +21,7 @@ export class AuthService {
     this.jwtEpiration = +this.configService.get<number>('JWT_EXPIRATION_TIME');
   }
 
-  async signIn(loginDto: LoginDto) {
+  async signIn(loginDto: LoginDto): Promise<AuthResponse> {
     try {
       const { cpf, senha } = loginDto;
       const novaSenha = loginDto.novaSenha || null;
@@ -40,8 +43,7 @@ export class AuthService {
           const payload = { sub: dados.id, username: dados.cpf };
           const token = this.jwtService.sign(payload);
           return {
-            id: funcionario.id,
-            primeiraEntrada: funcionario.primeiraEntrada,
+            type:'sucesso',
             funcionario,
             token,
             expiresIn: this.jwtEpiration,
@@ -56,7 +58,7 @@ export class AuthService {
       }
 
       if (!novaSenha) {
-        return { primeiraEntrada: funcionario.primeiraEntrada, statusCode: HttpStatus.ACCEPTED };
+        return { type:'primeiro_acesso', primeiraEntrada: funcionario.primeiraEntrada, statusCode: HttpStatus.ACCEPTED };
       }
 
       const updateFuncionarioDto: UpdateFuncionarioDto = {
@@ -65,7 +67,8 @@ export class AuthService {
         primeiraEntrada: true,
       };
 
-      return await this.funcionarioService.update(dados.id, updateFuncionarioDto);
+      await this.funcionarioService.update(dados.id, updateFuncionarioDto);
+      return
     } catch (error) {
       throw new HttpException(`${error}`, HttpStatus.NOT_FOUND);
     }

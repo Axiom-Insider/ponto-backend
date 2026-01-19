@@ -4,8 +4,9 @@ import { CreateFuncionarioDto } from './dto/create-funcionario.dto';
 import { UpdateFuncionarioDto } from './dto/update-funcionario.dto';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('funcionario')
 export class FuncionarioController {
   constructor(private readonly funcionarioService: FuncionarioService) {}
