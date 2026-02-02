@@ -28,21 +28,13 @@ export class AuthService {
         throw 'Nenhum funcionário com essas credencias foi encontrado';
       }
 
-      const funcionario = {
-        id: dados.id,
-        cpf: dados.cpf,
-        adm: dados.adm,
-        primeiraEntrada: dados.primeiraEntrada,
-      };
-
       if (dados.primeiraEntrada) {
         if (bcryptCompareSync(senha, dados.senha)) {
-          const payload = { sub: dados.id, username: dados.cpf };
+          const payload = { id: dados.id, cpf: dados.cpf, adm:dados.adm};
           const token = this.jwtService.sign(payload);
           return {
-            id: funcionario.id,
-            primeiraEntrada: funcionario.primeiraEntrada,
-            funcionario,
+            primeiraEntrada: dados.primeiraEntrada,
+            adm:dados.adm,
             token,
             expiresIn: this.jwtEpiration,
             statusCode: HttpStatus.OK,
@@ -56,7 +48,7 @@ export class AuthService {
       }
 
       if (!novaSenha) {
-        return { primeiraEntrada: funcionario.primeiraEntrada, statusCode: HttpStatus.ACCEPTED };
+        return { primeiraEntrada: dados.primeiraEntrada, statusCode: HttpStatus.ACCEPTED };
       }
 
       const updateFuncionarioDto: UpdateFuncionarioDto = {
