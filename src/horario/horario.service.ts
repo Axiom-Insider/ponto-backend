@@ -11,6 +11,7 @@ import { HorarioDoDia } from 'src/interfaces/horarios/horarioDoDia';
 import { stat } from 'fs';
 import { AusenciaService } from 'src/ausencia/ausencia.service';
 import { FeriadosService } from 'src/feriados/feriados.service';
+import { TipoTurno } from '@prisma/client';
 
 @Injectable()
 export class HorarioService {
@@ -270,9 +271,11 @@ export class HorarioService {
       );
     }
   }
-
+  //para Pagina
   async getHistorico(id_funcionario: number, mes: number, ano: number) {
     try {
+      console.log(id_funcionario, mes, ano);
+      
       const ausencias = await this.ausencias.findMesAno(id_funcionario, mes, ano);
       const feriados = await this.feriados.findMesAno(mes, ano);
       const horarios = await this.prisma.horarios.findMany({
@@ -310,25 +313,26 @@ export class HorarioService {
       });
 
       if (ausencias) {
-        ausencias.forEach((element) => {
-          const { dataInicio, dataFim, tipoAusencia } = element;
+        console.log(ausencias);
+        
+        ausencias.forEach((ausencia) => {
+          const { dataInicio, dataFim, tipoAusencia } = ausencia;
           const mesInicio = +dataInicio.split('-')[1];
           const mesFim = +dataFim.split('-')[1];
-          const diaInicio = +dataInicio.split('-')[2];
-          const diaFim = +dataFim.split('-')[2];
+          const diaInicio = +dataInicio.split('-')[0];
+          const diaFim = +dataFim.split('-')[0];
           var qnt = diaFim - diaInicio;
-
           if (mesInicio == mesFim) {
             if (qnt < 1) {
               historico.forEach((dadosHistorico) => {
-                if (diaInicio === dadosHistorico.dia) {
-                  dadosHistorico.ausencia = tipoAusencia;
+                if (diaInicio == dadosHistorico.dia) {
+                  dadosHistorico.ausencia = `${tipoAusencia}`;
                 }
               });
             } else {
               let novoDataInicio = diaInicio - 1;
               for (novoDataInicio; novoDataInicio < diaFim; novoDataInicio++) {
-                historico[novoDataInicio].ausencia = tipoAusencia;
+                historico[novoDataInicio].ausencia = `${tipoAusencia}`;
               }
             }
           } else {
@@ -574,53 +578,24 @@ export class HorarioService {
               : this.nomeDia(ano, mes, index),
           do: this.nomeDia(ano, mes, index) === 'Domingo' ? 'Domingo' : '',
           sa: this.nomeDia(ano, mes, index) === 'Sábado' ? 'Sábado' : '',
-          p_e: '--------',
-          s_e: '--------',
-          p_s: '--------',
+          p_e: '--------', //primeira entrada
+          s_e: '--------', // segunda entrada
+          p_s: '--------', //primeira saida
           s_s: '--------',
           au: '',
           f: '',
         });
       }
-
-      if (horarios) {
-        historico.forEach((dadosHisotrico) => {
-          horarios.forEach((dadosHorarios) => {
-            const { dataCriada, entrada, saida, id } = dadosHorarios;
-            const anoH = dataCriada.split('-')[0];
-            const mesH = dataCriada.split('-')[1];
-            if (ano === +anoH) {
-              if (mes === +mesH) {
-                const dia = dataCriada.split('-')[2];
-                if (dadosHisotrico.d === +dia) {
-                  if (dadosHisotrico.nomeDia) dadosHisotrico.id = id;
-                  if (dadosHisotrico.di != '') {
-                    if (entrada != null) {
-                      dadosHisotrico.p_e = entrada === null ? ':' : entrada;
-                      dadosHisotrico.p_s = saida === null ? ':' : saida;
-                      if (funcionario.turno == 'Matutino') {
-                        var hora_entrada = 14;
-                        var rando = Math.floor(Math.random() * 8) + 1;
-                        dadosHisotrico.s_e = `${hora_entrada}:0${rando}`;
-                        var hora_saida = 18;
-                        var minutosTemp = rando + (Math.floor(Math.random() * 7) + 1);
-                        dadosHisotrico.s_s = `${hora_saida}:${minutosTemp < 10 ? '0' + minutosTemp : minutosTemp}`;
-                      } else {
-                        var hora_entrada = 8;
-                        var rando = Math.floor(Math.random() * 8) + 1;
-                        dadosHisotrico.s_e = `0${hora_entrada}:0${rando}`;
-                        var hora_saida = 12;
-                        var minutosTemp = rando + (Math.floor(Math.random() * 4) + 1);
-                        dadosHisotrico.s_s = `${hora_saida}:${minutosTemp < 10 ? '0' + minutosTemp : minutosTemp}`;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
-        });
-      }
+      historico.forEach((dadosHistorico) => {
+        var minutos_entrada = Math.floor(Math.random() * 8) + 1;
+        var minutos_saida = Math.floor(Math.random() * 10) + 1;
+        dadosHistorico.p_e = `08:${minutos_entrada < 10 ? '0' + minutos_entrada : minutos_entrada}`;
+        dadosHistorico.p_s = `12:${minutos_saida < 10 ? '0' + minutos_saida : minutos_saida}`;
+        minutos_entrada = Math.floor(Math.random() * 8) + 1;
+        minutos_saida = Math.floor(Math.random() * 10) + 1;
+        dadosHistorico.s_e = `14:${minutos_entrada < 10 ? '0' + minutos_entrada : minutos_entrada}`;
+        dadosHistorico.s_s = `18:${minutos_saida < 10 ? '0' + minutos_saida : minutos_saida}`;
+      });
 
       if (ausencias) {
         ausencias.forEach((element) => {
@@ -641,6 +616,10 @@ export class HorarioService {
               let novoDataInicio = diaInicio - 1;
               for (novoDataInicio; novoDataInicio < diaFim; novoDataInicio++) {
                 historico[novoDataInicio].au = tipoAusencia;
+                historico[novoDataInicio].p_e = '--------';
+                historico[novoDataInicio].p_s = '--------';
+                historico[novoDataInicio].s_e = '--------';
+                historico[novoDataInicio].s_s = '--------';
               }
             }
           } else {
@@ -648,6 +627,10 @@ export class HorarioService {
               const dia = diaInicio;
               for (let novoDataInicio = dia - 1; novoDataInicio < qntDia; novoDataInicio++) {
                 historico[novoDataInicio].au = tipoAusencia;
+                historico[novoDataInicio].p_e = '--------';
+                historico[novoDataInicio].p_s = '--------';
+                historico[novoDataInicio].s_e = '--------';
+                historico[novoDataInicio].s_s = '--------';
               }
             }
             if (mesFim == mes) {
@@ -655,6 +638,10 @@ export class HorarioService {
               while (dia > 0) {
                 dia--;
                 historico[dia].au = tipoAusencia;
+                historico[dia].p_e = '--------';
+                historico[dia].p_s = '--------';
+                historico[dia].s_e = '--------';
+                historico[dia].s_s = '--------';
               }
             }
           }
@@ -674,11 +661,19 @@ export class HorarioService {
               historico.forEach((dadosHistorico) => {
                 if (diaInicio === dadosHistorico.d) {
                   dadosHistorico.f = ` ${tipoFeriado} = ${nome}`;
+                  dadosHistorico.p_e = '--------';
+                  dadosHistorico.p_s = '--------';
+                  dadosHistorico.s_e = '--------';
+                  dadosFeriados.s_s = '--------';
                 }
               });
             } else {
               for (let novoDataInicio = diaInicio - 1; novoDataInicio < diaFim; novoDataInicio++) {
                 historico[novoDataInicio].f = ` ${tipoFeriado} = ${nome}`;
+                historico[novoDataInicio].p_e = '--------';
+                historico[novoDataInicio].p_s = '--------';
+                historico[novoDataInicio].s_e = '--------';
+                historico[novoDataInicio].s_s = '--------';
               }
             }
           } else {
@@ -686,6 +681,10 @@ export class HorarioService {
               const dia = diaInicio;
               for (let novoDataInicio = dia - 1; novoDataInicio < qntDia; novoDataInicio++) {
                 historico[novoDataInicio].f = ` ${tipoFeriado} = ${nome}`;
+                historico[novoDataInicio].p_e = '--------';
+                historico[novoDataInicio].p_s = '--------';
+                historico[novoDataInicio].s_e = '--------';
+                historico[novoDataInicio].s_s = '--------';
               }
             }
             if (mesFim == mes) {
@@ -693,6 +692,10 @@ export class HorarioService {
               while (dia > 0) {
                 dia--;
                 historico[dia].f = ` ${tipoFeriado} = ${nome}`;
+                historico[dia].p_e = '--------';
+                historico[dia].p_s = '--------';
+                historico[dia].s_e = '--------';
+                historico[dia].s_s = '--------';
               }
             }
           }

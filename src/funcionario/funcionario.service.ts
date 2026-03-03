@@ -108,7 +108,7 @@ export class FuncionarioService {
 
   async resetarSenha(id: number) {
     try {
-      const dados = await this.prisma.funcionarios.update({
+        await this.prisma.funcionarios.update({
         where: { id },
         data: { primeiraEntrada: false, senha: '123' },
       });
@@ -135,7 +135,6 @@ export class FuncionarioService {
         where: { id },
         data: updateFuncionarioDto,
       });
-      console.log(funcionario);
 
       if (funcionario.count > 0) {
         const nomeSeparado = found.nome.split(' ');

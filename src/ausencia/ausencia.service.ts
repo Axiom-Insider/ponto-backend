@@ -18,7 +18,6 @@ export class AusenciaService {
   async create(createAusenciaDto: CreateAusenciaDto): Promise<{}> {
     try {
       const { id_funcionario, tipoAusencia, dataInicio, dataFim } = createAusenciaDto;
-
       await this.prisma.ausencias.create({
         data: { dataInicio, dataFim, id_funcionario, tipoAusencia },
       });
@@ -95,8 +94,8 @@ export class AusenciaService {
         const { dataInicio, dataFim } = dados;
         var tempInicio = dataInicio.split('-');
         var tempFim = dataFim.split('-');
-        dados.dataInicio = `${tempInicio[2]}/${tempInicio[1]}/${tempInicio[0]}`;
-        dados.dataFim = `${tempFim[2]}/${tempFim[1]}/${tempFim[0]}`;
+        dados.dataInicio = `${tempInicio[2]}-${tempInicio[1]}-${tempInicio[0]}`;
+        dados.dataFim = `${tempFim[2]}-${tempFim[1]}-${tempFim[0]}`;
       });
 
       return ausencias;
@@ -116,7 +115,6 @@ export class AusenciaService {
       WHERE id_funcionario = ${id_funcionario}
       ORDER BY ano DESC
       `;
-      console.log(dados);
 
       return { dados, statusCode: HttpStatus.OK };
     } catch (error) {

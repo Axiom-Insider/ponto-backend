@@ -92,6 +92,7 @@ export class DocumentoService {
         mes,
         ano,
       );
+
       var user = historico.historico;
 
       const filePath = path.join(

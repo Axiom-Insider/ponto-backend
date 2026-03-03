@@ -28,6 +28,12 @@ export class FuncionarioController {
     return res.status(findOne.statusCode).json(findOne.dados);
   }
 
+  @Patch("/resetarSenha/:id")
+  async resetar(@Param('id') id:string, @Res() res:Response){
+    const funcionario = await this.funcionarioService.resetarSenha(+id);
+    return res.status(funcionario.statusCode).json(funcionario);
+  }
+
   @Patch(':id')
   async update(
     @Param('id') id: string,
